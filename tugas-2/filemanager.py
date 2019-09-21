@@ -6,21 +6,8 @@ class FileManager(object):
     def __init__(self):
         pass
 
-    def parseCommand(self, cmd):
-        if cmd == None or cmd == '':
-            return None
-        parse = re.sub(r'\n', '', cmd)
-        parse = parse.split(' ')
-        if parse[0] == 'LIST':
-            return ['LIST', None]
-        elif parse.__len__() != 2:
-            return ['Error', 'Filename doesn\'t exist / incorrect parameter']
-        elif parse[0] == 'SEND' or parse[0] == 'DEL' or parse[0] == 'READ' or parse[0] == 'EDIT':
-            return parse
-        else:
-            return ['Error', 'Incorrect command']
-
     def send(self, filename):
+
         return
 
     def delete(self, filename):
@@ -41,7 +28,7 @@ class FileManager(object):
         return ret
 
     def runCommand(self, command=''):
-        command = self.parseCommand(command)
+        # command = self.parseCommand(command)
         if command == None:
             return
         if command[0] == 'Error':
