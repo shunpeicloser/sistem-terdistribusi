@@ -1,6 +1,6 @@
 import Pyro4
 import sys
-import socket
+import re
 
 def createProxy(ns='localhost:50001'):
     uri = "PYRONAME:filemanager@"+ns
