@@ -7,7 +7,7 @@ def createProxy(ns='localhost:50001'):
     proxy = Pyro4.Proxy(uri)
     return proxy
 
-def parseCommand(self, cmd):
+def parseCommand(cmd):
     if cmd == None or cmd == '':
         return None
     parse = re.sub(r'\n', '', cmd)
@@ -35,8 +35,17 @@ def command(proxy=None):
 
             cmd = input(">> ")
             cmd = parseCommand(cmd)
-            response = proxy.runCommand(cmd)
-            
+            if cmd[0] == 'SEND' or cmd[0] == 'EDIT':
+                f = open(cmd[1])
+                buf = f.read()
+                f.close()
+                response = proxy.runCommand(cmd, buf)
+            elif cmd[0] != 'ERROR':
+                response = proxy.runCommand(cmd)
+            else:
+                print(cmd[0]+cmd[1])
+                continue
+
             print(response)
     except KeyboardInterrupt:
         print('\nClient closed.')

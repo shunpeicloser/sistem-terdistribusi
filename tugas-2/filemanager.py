@@ -8,11 +8,12 @@ class FileManager(object):
 
     def send(self, filename, data):
         if os.path.isfile('./files/'+filename):
-            return filename+' has been exist!'
+            return filename+' existed. Aborting SEND...'
         try:
             f = open('./files/'+filename, mode='w')
             if data != None:
                 f.write(data)
+            f.close()
             return filename+' has been send'
         except IOError:
             return 'Fail to send '+filename
@@ -25,11 +26,10 @@ class FileManager(object):
             return filename+' not exist'
     
     def read(self, filename):
-        ret = ''
         f = open('./files/'+filename)
-        for i in f:
-            ret += i
-        return ret
+        ret = f.read()
+        f.close()
+        return '===Content of '+filename+'===\n'+ret+'\n==='
     
     def edit(self, filename, data):
         ret = ''
@@ -38,13 +38,14 @@ class FileManager(object):
         try:
             f = open('./files/'+filename, mode='w')
             if data != None:
-                f.write(data)
+                f.write(data)  
+            f.close()
             if ret != '':
                 return ret
             else:
-                return filename+' has been editted'
+                return filename+' has been updated'
         except IOError:
-            return 'Fail to send '+filename
+            return 'Fail to edit '+filename
     
     def lists(self):
         ret = '=============\nList of Files:\n'
