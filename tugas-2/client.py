@@ -51,4 +51,4 @@ def command(proxy=None):
         print('\nClient closed.')
 
 if __name__=='__main__':
-    command(createProxy())
+    command(createProxy('10.151.62.66:6969'))

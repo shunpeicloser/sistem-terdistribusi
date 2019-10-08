@@ -14,4 +14,4 @@ def start_server(host='localhost', port=50001):
     daemon.requestLoop()
 
 if __name__ == '__main__':
-    start_server()
+    start_server('10.151.253.159', 8081)
