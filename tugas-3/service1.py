@@ -1,5 +1,6 @@
 from datetime import datetime
-
+import time
+import _thread
 class Service1:
     id = 1
     def act(self):
@@ -22,11 +23,11 @@ class Pinger1:
             if service.id == self.id:
                 continue
             t = datetime.utcnow()
-            self.service_list[service.id] = [service, t]
-        
+            self.service_list[service.id] = [service, t, t]
+    
         return "success"
 
-    # send
+    # check beat, run as thread per connected service
     def recv_beat(self, src_id):
         if self.id == src_id:
             return
@@ -34,14 +35,23 @@ class Pinger1:
         while True:
             try:
                 now = datetime.utcnow()
-                if (now - self.service_list[src_id][1]).total_seconds > 6:
-                    print('Server '+str(dest_id)+' fail. Deleting from service_list')
-                    self.service_list.__delitem__(dest_id)
+                self.service_list[src_id][2] = now
+                if abs((now - self.service_list[src_id][1]).total_seconds) > 6:
+                    print('Server '+str(src_id)+' fail. Deleting from service_list')
+                    self.service_list.__delitem__(src_id)
                     return
+                time.sleep(2)                
             except KeyboardInterrupt:
                 return
 
-    # recv
+    # send
     @Pyro4.oneway
     def send_beat(self, dest_id):
         self.service_list[dest_id][1] = datetime.utcnow()
+        return
+
+    def get_service_proxy(self):
+        
+
+    def auto_run(self):
+        pass
