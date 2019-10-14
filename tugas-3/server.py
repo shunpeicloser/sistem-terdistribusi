@@ -11,28 +11,17 @@ def start_server(host='localhost', port=50001):
     ns = Pyro4.locateNS(host, port)
 
     service1 = Pyro4.expose(Service1)
-    pinger1 = Pyro4.expose(Pinger1)
-
-    service2 = Pyro4.expose(Service2)
-    pinger2 = Pyro4.expose(Pinger2)
-
+    # service2 = Pyro4.expose(Service2)
     service3 = Pyro4.expose(Service3)
-    pinger3 = Pyro4.expose(Pinger3)
     
     uri_s1 = daemon.register(service1)
-    uri_p1 = daemon.register(pinger1)
-    uri_s2 = daemon.register(service2)
-    uri_p2 = daemon.register(pinger2)
+    # uri_s2 = daemon.register(service2)
     uri_s3 = daemon.register(service3)
-    uri_p1 = daemon.register(pinger3)
 
     # print("URI FileManager : ", uri)
     ns.register("service1", uri_s1)
-    ns.register("pinger1", uri_p1)
-    ns.register("service2", uri_s2)
-    ns.register("pinger2", uri_p2)
+    # ns.register("service2", uri_s2)
     ns.register("service3", uri_s3)
-    ns.register("pinger3", uri_p3)
     
     daemon.requestLoop()
 
