@@ -41,7 +41,7 @@ class Service2:
                     return
                 # print(self.service_list[src_id][1:], abs((self.service_list[src_id][2] - self.service_list[src_id][1]).total_seconds))
                 time.sleep(2)
-        except KeyboardInterrupt:
+        except:
             return
 
     # send
@@ -51,9 +51,10 @@ class Service2:
 
         while True:
             try:
+                self.service_list[dest_id][0].act()
                 self.service_list[dest_id][1] = datetime.utcnow()
                 time.sleep(2)
-            except KeyboardInterrupt:
+            except:
                 return
 
     def get_service_proxy(self, ns='localhost:50001'):
@@ -72,8 +73,8 @@ class Service2:
     def watch(self):
         try:
             while True:
-                print(self.get_connected_service())
-                time.sleep(2)
+                # print(self.get_connected_service())
+                time.sleep(6)
         except KeyboardInterrupt:
             return
         
