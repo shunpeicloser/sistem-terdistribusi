@@ -26,7 +26,7 @@ class Service1:
         # add services
         for service in services:
             t = datetime.utcnow()
-            self.service_list[service.get_id()] = [service, 0, 0]
+            self.service_list[service.get_id()] = [service, t, t]
     
         return "services has been added"
 
@@ -43,8 +43,9 @@ class Service1:
                     self.service_list.__delitem__(src_id)
                     return
                 # print(self.service_list[src_id][1:], abs((self.service_list[src_id][2] - self.service_list[src_id][1]).total_seconds))
-                time.sleep(2)
+                time.sleep(5)
         except:
+            print('ada error 1')
             return
 
     # send
@@ -56,13 +57,13 @@ class Service1:
             try:
                 self.service_list[dest_id][0].act()
                 self.service_list[dest_id][1] = datetime.utcnow()
-                time.sleep(2)
+                time.sleep(5)
             except:
                 return
 
     def get_service_proxy(self, ns='localhost:50001'):
         ret = []
-        for i in range(1, 4):
+        for i in range(1, 3):
             if i == self.get_id():
                 continue
             uri = "PYRONAME:service"+str(i)+"@"+ns
@@ -77,8 +78,8 @@ class Service1:
         try:
             while True:
                 print(self.get_connected_service())
-                time.sleep(6)
-        except KeyboardInterrupt:
+                time.sleep(15)
+        except:
             return
         
 
@@ -88,7 +89,7 @@ class Service1:
         trecv = []
         w = threading.Thread(target=self.watch)
         self.add_services()
-        for i in range(1, 4):
+        for i in range(1, 3):
             tsend.append(threading.Thread(target=self.send_beat, args=(i,)))
             trecv.append(threading.Thread(target=self.recv_beat, args=(i,)))
         for s,r in zip(tsend,trecv):
