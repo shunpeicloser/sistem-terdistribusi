@@ -38,7 +38,7 @@ class Service2:
         try:
             while True:
                 self.service_list[src_id][2] = datetime.utcnow()
-                if abs((self.service_list[src_id][2] - self.service_list[src_id][1]).total_seconds()) > 6:
+                if abs((self.service_list[src_id][2] - self.service_list[src_id][1]).total_seconds()) > 15:
                     print('Server '+str(src_id)+' fail. Deleting from service_list')
                     self.service_list.__delitem__(src_id)
                     return
