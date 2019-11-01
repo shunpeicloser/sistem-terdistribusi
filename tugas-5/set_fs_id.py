@@ -14,3 +14,7 @@ p = None
 for i in instances:
     p = Pyro4.Proxy("PYRONAME:{}@localhost:50001" . format(i))
     p.set_identifier(i)
+    for j in instances:
+        if i != j:
+            q = Pyro4.Proxy("PYRONAME:{}@localhost:50001" . format(j))
+            p.add_peer(q)
