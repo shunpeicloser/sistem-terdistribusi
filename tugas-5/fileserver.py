@@ -5,41 +5,46 @@ class FileServer(object):
     def __init__(self):
         pass
 
+    def report(self, client_id):
+        print(str(client_id) + ' has been connected')
+
     def set_identifier(self, id):
-        self.id = id
-        self.basedir = id
+        FileServer.id = id
+        FileServer.basedir = id
 
     def create_return_message(self,kode='000',message='kosong',data=None):
         return dict(kode=kode,message=message,data=data)
 
     def list(self):
         print("list ops")
+        print("{}".format(FileServer.basedir))
         try:
             daftarfile = []
-            prefix = "{}-".format(self.id)
-            for x in os.listdir("./{}".format(self.basedir)):
-                if x[0:self.id.__len__()] == prefix:
-                    daftarfile.append(x[self.id.__len__():])
+            prefix = "{}-".format(FileServer.id)
+            for x in os.listdir("{}".format(FileServer.basedir)):
+                print(x[0:FileServer.id.__len__()])
+                if x[0:FileServer.id.__len__()+1] == prefix:
+                    daftarfile.append(x[FileServer.id.__len__()+1:])
             return self.create_return_message('200',daftarfile)
         except:
             return self.create_return_message('500','Error')
 
     def create(self, name='filename000'):
-        nama='{}-{}' . format(self.id, name)
-        print("create ops {}" . format(nama))
+        name='{}-{}' . format(FileServer.id, name)
+        print("create ops {}" . format(name))
         try:
-            if os.path.exists("./{}/{}".format(self.basedir, name)):
+            if os.path.exists("{}/{}".format(FileServer.basedir, name)):
                 return self.create_return_message('102', 'OK','File Exists')
-            f = open("./{}/{}".format(self.basedir, name),'wb',buffering=0)
+            f = open("{}/{}".format(FileServer.basedir, name),'wb',buffering=0)
             f.close()
             return self.create_return_message('100','OK')
         except:
             return self.create_return_message('500','Error')
     def read(self,name='filename000'):
-        nama='{}-{}' . format(self.id, name)
-        print("read ops {}" . format(nama))
+        name='{}-{}' . format(FileServer.id, name)
+        print("read ops {}" . format(name))
         try:
-            f = open("./{}/{}".format(self.basedir, name),'r+b')
+            f = open("{}/{}".format(FileServer.basedir, name),'r+b')
             contents = f.read().decode()
             f.close()
             return self.create_return_message('101','OK',contents)
@@ -47,25 +52,26 @@ class FileServer(object):
             return self.create_return_message('500','Error')
             
     def update(self,name='filename000',content=''):
-        nama='{}-{}' . format(self.id, name)
-        print("update ops {}" . format(nama))
+        print(content)
+        name='{}-{}' . format(FileServer.id, name)
+        print("update ops {}" . format(name))
 
         if (str(type(content))=="<class 'dict'>"):
             content = content['data']
         try:
-            f = open("./{}/{}".format(self.basedir, name),'w+b')
-            f.write(content.encode())
+            f = open("{}/{}".format(FileServer.basedir, name),'w+b')
+            f.write( base64.b64decode( content ) )
             f.close()
             return self.create_return_message('101','OK')
         except Exception as e:
             return self.create_return_message('500','Error',str(e))
 
     def delete(self,name='filename000'):
-        nama='{}-{}' . format(self.id, name)
-        print("delete ops {}" . format(nama))
+        name='{}-{}' . format(FileServer.id, name)
+        print("delete ops {}" . format(name))
 
         try:
-            os.remove("./{}/{}".format(self.basedir, name))
+            os.remove("{}/{}".format(FileServer.basedir, name))
             return self.create_return_message('101','OK')
         except:
             return self.create_return_message('500','Error')

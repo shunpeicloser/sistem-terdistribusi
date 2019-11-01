@@ -6,8 +6,8 @@ import re
 
 namainstance = sys.argv[1] or "fs1"
 
-def get_fileserver_object(port=50001):
-    uri = "PYRONAME:{}@localhost:{}" . format(namainstance, str(port))
+def get_fileserver_object(host='localhost', port=50001):
+    uri = "PYRONAME:{}@{}:{}" . format(namainstance, host, str(port))
     fserver = Pyro4.Proxy(uri)
     return fserver
 
@@ -27,7 +27,7 @@ def parseCommand(cmd):
 
 if __name__=='__main__':
     proxy = get_fileserver_object()
-    print(proxy)
+    proxy.report(namainstance)
     try:
         while True:
             response = ''
@@ -42,16 +42,16 @@ if __name__=='__main__':
             cmd = parseCommand(cmd)
             print(cmd)
             if cmd[0] == 'SEND':
-                response += proxy.create(cmd[1])
-                response += proxy.update(cmd[1], content = open(cmd[1],'rb+').read())
+                response += str(proxy.create(cmd[1]))
+                response += str(proxy.update(cmd[1], content = open(cmd[1],'r+b').read()))
             elif cmd[0] == 'EDIT':
-                response += proxy.update(cmd[1], content = open(cmd[1],'rb+').read())
+                response += str(proxy.update(cmd[1], content = open(cmd[1],'r+b').read()))
             elif cmd[0] == 'READ':
-                response += proxy.read(cmd[1])
+                response += str(proxy.read(cmd[1]))
             elif cmd[0] == 'DEL':
-                response += proxy.delete(cmd[1])
+                response += str(proxy.delete(cmd[1]))
             elif cmd[0] == 'LIST':
-                response += proxy.list()
+                response += str(proxy.list())
             else:
                 print(cmd[0]+cmd[1])
                 continue

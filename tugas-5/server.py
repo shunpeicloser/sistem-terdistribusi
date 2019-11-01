@@ -1,8 +1,11 @@
 from fileserver import  *
 import Pyro4
 import sys
+import threading
+import time
 
 namainstance = sys.argv[1]
+
 
 def start_with_ns(hostname="localhost", port=50001):
     #name server harus di start dulu dengan  pyro4-ns -n localhost -p 7777
@@ -14,10 +17,22 @@ def start_with_ns(hostname="localhost", port=50001):
     x_FileServer = Pyro4.expose(FileServer)
     uri_fileserver = daemon.register(x_FileServer)
     ns.register("{}" . format(namainstance), uri_fileserver)
-    Pyro4.Proxy("PYRONAME:{}@localhost:{}" . format(namainstance, str(port))).set_identifier(namainstance)
-    print("PYRONAME:{}@localhost:{}" . format(namainstance, str(port)))
-    daemon.requestLoop()
-
+    print("PYRONAME:{}@{}:{}" . format(namainstance, hostname, str(port)))
+    t = threading.Thread(target=daemon.requestLoop())
+    t.start()
+    t.join()
+    # daemon.requestLoop()
 
 if __name__ == '__main__':
-    start_with_ns()
+    try:
+        h = 'localhost'
+        p = 50001
+        
+        start_with_ns(h, p)
+        # time.sleep(2)
+
+        # prx = Pyro4.Proxy("PYRONAME:{}@{}:{}" . format(namainstance, h, str(p)))
+        # print(prx)
+        # .set_identifier(namainstance)
+    except:
+        print('server closed')
