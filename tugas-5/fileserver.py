@@ -3,6 +3,7 @@ import base64
 from collections import defaultdict
 class FileServer(object):
     peer = []
+    filestate = None
 
     def __init__(self):
         pass
@@ -11,49 +12,65 @@ class FileServer(object):
         print(str(client_id) + ' has been connected')
 
     def init_filestate(self):
-        FileServer.filestate = defaultdict(lambda: '', FileServer.filestate)
+        FileServer.filestate = defaultdict(str)
         for x in os.listdir("{}".format(FileServer.basedir)):
             FileServer.filestate[x[FileServer.id.__len__()+1:]] = 'unlock'
+        print(FileServer.filestate)
 
     def get_filestate(self, filename):
-        return FileServer.filestate[filename]
+        if filename in FileServer.filestate:
+            return FileServer.filestate[filename]
+        else:
+            return 'unlock'
+
+    def unlock_file(self, filename):
+        FileServer.filestate[filename] = 'unlock'
 
     def set_identifier(self, id):
         FileServer.id = id
         FileServer.basedir = id
-        FileServer.init_filestate()
+        FileServer.init_filestate(FileServer)
 
     def add_peer(self, peer_proxy):
         FileServer.peer.append(peer_proxy)
     
+    def is_unlocked(self, filename):
+        flag = True
+        for peer_proxy in FileServer.peer:
+            if not FileServer.is_unlocked_peer(FileServer, filename, peer_proxy):
+                flag = False
+                break
+
+        return flag 
+
     def is_unlocked_peer(self, filename, peer_proxy):
         return (peer_proxy.get_filestate(filename) == 'unlock')
 
     def propagate(self, cmd, filename=None):
         flag = False
-        for peer_proxy in FileServer:
-            if not FileServer.is_unlocked_peer(filename, peer_proxy):
+        for peer_proxy in FileServer.peer:
+            if not FileServer.is_unlocked_peer(FileServer, filename, peer_proxy):
                 flag = True
                 break
 
         if flag:
-            return self.create_return_message('9999','File still in use by another user')
+            return FileServer.create_return_message(FileServer, '9999','File still in use by another user')
 
-        FileServer.filestate[filename] = 'lock'
+        # FileServer.filestate[filename] = 'lock'
         ret = None
 
         if cmd == 'create':
-            for peer_proxy in FileServer:
-                peer_proxy.create(filename)
-            ret = self.create_return_message('100','OK')
+            for peer_proxy in FileServer.peer:
+                peer_proxy.create(filename, prop=False)
+            ret = FileServer.create_return_message(FileServer, '100','OK')
         elif cmd == 'update':
-            for peer_proxy in FileServer:
-                peer_proxy.update(filename, content = open(str(FileServer.basedir)+'/'+filename,'r+b').read())
-            ret = self.create_return_message('101','OK')
+            for peer_proxy in FileServer.peer:
+                peer_proxy.update(filename, content = open(str(FileServer.basedir)+'/'+str(FileServer.basedir)+"-"+filename,'r+b').read(), prop=False)
+            ret = FileServer.create_return_message(FileServer, '101','OK')
         elif cmd == 'delete':
-            for peer_proxy in FileServer:
-                peer_proxy.delete(filename)
-            ret = self.create_return_message('101','OK')
+            for peer_proxy in FileServer.peer:
+                peer_proxy.delete(filename, prop=False)
+            ret = FileServer.create_return_message(FileServer, '101','OK')
         else:
             pass
 
@@ -73,56 +90,90 @@ class FileServer(object):
                 print(x[0:FileServer.id.__len__()])
                 if x[0:FileServer.id.__len__()+1] == prefix:
                     daftarfile.append(x[FileServer.id.__len__()+1:])
-            return self.create_return_message('200',daftarfile)
+            return FileServer.create_return_message(FileServer, '200',daftarfile)
         except:
-            return self.create_return_message('500','Error')
+            return FileServer.create_return_message(FileServer, '500','Error')
 
-    def create(self, name='filename000'):
+    def create(self, name='filename000', prop=True):
+        oldname = name
         name='{}-{}' . format(FileServer.id, name)
         print("create ops {}" . format(name))
         try:
             if os.path.exists("{}/{}".format(FileServer.basedir, name)):
-                return self.create_return_message('102', 'OK','File Exists')
+                return self.create_return_message(FileServer, '102', 'OK','File Exists')
+            if not FileServer.is_unlocked(FileServer, oldname) and prop:
+                return FileServer.create_return_message(FileServer, '9999','File still in use by another user')
+            if prop:
+                FileServer.filestate[oldname] = 'lock'
             f = open("{}/{}".format(FileServer.basedir, name),'wb',buffering=0)
             f.close()
-            return FileServer.propagate('create', name) #self.create_return_message('100','OK')
+            print(FileServer.filestate)
+            if prop:
+                return FileServer.propagate(FileServer, 'create', oldname)
+            else:
+                return FileServer.create_return_message('100','OK')
         except:
-            return self.create_return_message('500','Error')
-    def read(self,name='filename000'):
+            return FileServer.create_return_message(FileServer, '500','Error')
+    
+    def read(self,name='filename000', prop=True):
+        oldname = name
         name='{}-{}' . format(FileServer.id, name)
         print("read ops {}" . format(name))
         try:
+            if not FileServer.is_unlocked(FileServer, oldname) and prop:
+                return FileServer.create_return_message(FileServer, '9999','File still in use by another user')
+            # if prop:
+            FileServer.filestate[oldname] = 'lock'
             f = open("{}/{}".format(FileServer.basedir, name),'r+b')
             contents = f.read().decode()
             f.close()
-            tmp = FileServer.propagate('read', name)
-            if tmp['kode'] == '9999':
-                return tmp
-            return self.create_return_message('101','OK',contents)
-        except:
-            return self.create_return_message('500','Error')
+            FileServer.filestate[oldname] = 'unlock'
+            print(FileServer.filestate)
+            # if prop:
+            #     tmp = FileServer.propagate(FileServer, 'read', oldname)
+            return FileServer.create_return_message(FileServer, '101','OK',contents)
+        except Exception as e:
+            return FileServer.create_return_message(FileServer, '500','Error', str(e))
             
-    def update(self,name='filename000',content=''):
-        print(content)
+    def update(self,name='filename000',content='', prop=True):
+        oldname = name
         name='{}-{}' . format(FileServer.id, name)
         print("update ops {}" . format(name))
 
         if (str(type(content))=="<class 'dict'>"):
             content = content['data']
         try:
+            if not FileServer.is_unlocked(FileServer, oldname) and prop:
+                return FileServer.create_return_message(FileServer, '9999','File still in use by another user')
+            if prop:
+                FileServer.filestate[oldname] = 'lock'
             f = open("{}/{}".format(FileServer.basedir, name),'w+b')
             f.write( base64.b64decode( content ) )
             f.close()
-            return FileServer.propagate('update', name) #self.create_return_message('101','OK')
+            print(FileServer.filestate)
+            if prop:
+                return FileServer.propagate(FileServer, 'update', oldname)
+            else:
+                return FileServer.create_return_message('101','OK')
         except Exception as e:
-            return self.create_return_message('500','Error',str(e))
+            return FileServer.create_return_message(FileServer, '500','Error',str(e))
 
-    def delete(self,name='filename000'):
+    def delete(self,name='filename000', prop=True):
+        oldname = name
         name='{}-{}' . format(FileServer.id, name)
         print("delete ops {}" . format(name))
 
         try:
+            if not FileServer.is_unlocked(FileServer, oldname) and prop:
+                return FileServer.create_return_message(FileServer, '9999','File still in use by another user')
+            if prop:
+                FileServer.filestate[oldname] = 'lock'
             os.remove("{}/{}".format(FileServer.basedir, name))
-            return FileServer.propagate('delete', name) #self.create_return_message('101','OK')
+            del FileServer.filestate[oldname]
+            print(FileServer.filestate)
+            if prop:
+                return FileServer.propagate(FileServer, 'delete', oldname)
+            else:
+                FileServer.create_return_message('101','OK')
         except:
-            return self.create_return_message('500','Error')
+            return FileServer.create_return_message(FileServer, '500','Error')

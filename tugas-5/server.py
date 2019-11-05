@@ -15,7 +15,7 @@ def start_with_ns(hostname="localhost", port=50001):
     daemon = Pyro4.Daemon(host=hostname)
     ns = Pyro4.locateNS(hostname,port)
     x_FileServer = Pyro4.expose(FileServer)
-    uri_fileserver = daemon.register(x_FileServer)
+    uri_fileserver = daemon.register(x_FileServer, force=True)
     ns.register("{}" . format(namainstance), uri_fileserver)
     print("PYRONAME:{}@{}:{}" . format(namainstance, hostname, str(port)))
     t = threading.Thread(target=daemon.requestLoop())
